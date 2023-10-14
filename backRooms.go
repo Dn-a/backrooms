@@ -2,7 +2,7 @@ package main
 
 /*
 * Di Natale Antonino | https://www.dn-a.it
-*/
+ */
 
 import (
 	"bytes"
@@ -146,7 +146,6 @@ func getConfig() (*configurations, error) {
 	}
 
 	//log.Printf("%+v\n", modTime)
-	//log.Printf("%+v\n", conf.UpdatedOn)
 
 	return conf, nil
 }
@@ -165,7 +164,6 @@ func generateRequestMatchers(config *configurations) *map[string]interface{} {
 			} else {
 				m[mainKey] = matchersRecursion(&slice, &resourceAddress)
 			}
-			//log.Printf("k:%v recursion: %v res:%v", k, m, resource)
 		}
 	}
 	return &m
@@ -189,11 +187,6 @@ func reverseProxy(url string) *httputil.ReverseProxy {
 
 	director := func(req *http.Request) {
 		//log.Printf("custom Director")
-		/* slicedUrl := slicedUrl(url)
-		scheme, host := slicedUrl[0], slicedUrl[1]
-		req.URL.Scheme = scheme
-		req.URL.Host = host
-		req.Host = host */
 	}
 
 	dial := func(network, addr string) (net.Conn, error) {
@@ -201,21 +194,7 @@ func reverseProxy(url string) *httputil.ReverseProxy {
 		return net.Dial(network, addr)
 	}
 
-	//transport := &http.Transport{Dial: dial,}
-	/* prints:
-	   2016/02/18 13:35:34 (func(string, string) (net.Conn, error))(0x401810)
-	   2016/02/18 13:35:34 &http.Transport{idleMu:sync.Mutex{state:0, sema:0x0}, wantIdle:false, idleConn:map[http.connectMethodKey][]*http.persistConn(nil), idleConnCh:map[http.connectMethodKey]chan *http.persistConn(nil), reqMu:sync.Mutex{state:0, sema:0x0}, reqCanceler:map[*http.Request]func()(nil), altMu:sync.RWMutex{w:sync.Mutex{state:0, sema:0x0}, writerSem:0x0, readerSem:0x0, readerCount:0, readerWait:0}, altProto:map[string]http.RoundTripper(nil), Proxy:(func(*http.Request) (*url.URL, error))(nil), Dial:(func(string, string) (net.Conn, error))(0x401810), DialTLS:(func(string, string) (net.Conn, error))(nil), TLSClientConfig:(*tls.Config)(nil), TLSHandshakeTimeout:0, DisableKeepAlives:false, DisableCompression:false, MaxIdleConnsPerHost:0, ResponseHeaderTimeout:0, ExpectContinueTimeout:0, TLSNextProto:map[string]func(string, *tls.Conn) http.RoundTripper(nil), nextProtoOnce:sync.Once{m:sync.Mutex{state:0, sema:0x0}, done:0x0}, h2transport:(*http.http2Transport)(nil)}
-	   2016/02/18 13:35:36 custom Director
-	   2016/02/18 13:35:36 custom Dial
-	*/
-
 	transport := &customTransport{http.Transport{Dial: dial}}
-	/* prints:
-	   2016/02/18 13:36:45 (func(string, string) (net.Conn, error))(0x401950)
-	   2016/02/18 13:36:45 &main.customTransport{Transport:http.Transport{idleMu:sync.Mutex{state:0, sema:0x0}, wantIdle:false, idleConn:map[http.connectMethodKey][]*http.persistConn(nil), idleConnCh:map[http.connectMethodKey]chan *http.persistConn(nil), reqMu:sync.Mutex{state:0, sema:0x0}, reqCanceler:map[*http.Request]func()(nil), altMu:sync.RWMutex{w:sync.Mutex{state:0, sema:0x0}, writerSem:0x0, readerSem:0x0, readerCount:0, readerWait:0}, altProto:map[string]http.RoundTripper(nil), Proxy:(func(*http.Request) (*url.URL, error))(nil), Dial:(func(string, string) (net.Conn, error))(0x401950), DialTLS:(func(string, string) (net.Conn, error))(nil), TLSClientConfig:(*tls.Config)(nil), TLSHandshakeTimeout:0, DisableKeepAlives:false, DisableCompression:false, MaxIdleConnsPerHost:0, ResponseHeaderTimeout:0, ExpectContinueTimeout:0, TLSNextProto:map[string]func(string, *tls.Conn) http.RoundTripper(nil), nextProtoOnce:sync.Once{m:sync.Mutex{state:0, sema:0x0}, done:0x0}, h2transport:(*http.http2Transport)(nil)}}
-	   2016/02/18 13:36:46 custom Director
-	   2016/02/18 13:36:46 custom RoundTrip
-	*/
 
 	return &httputil.ReverseProxy{Director: director, Transport: transport}
 }
@@ -253,8 +232,7 @@ func forward(callback func(path string) (string, string)) http.Handler {
 			//w.Header().Set("Content-Type", "application/json")
 			http.Redirect(w, req, req.URL.String(), http.StatusTemporaryRedirect)
 		} else {
-			proxy := reverseProxy(url)
-			proxy.ServeHTTP(w, req)
+			reverseProxy(url).ServeHTTP(w, req)
 		}
 
 	})
@@ -271,12 +249,11 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.Handle("/", forward(func(path string) (string, string) {
-		config, _ := getConfig()
+		config, _ = getConfig()
 
 		// E.G:
-		// key: flt
-		// destination-url: localhost
-		//log.Printf("resources: %v", rsc)
+		// key: foo
+		// url: localhost
 		//rsc, key := config.Resources[resource]
 		rsc, ok := config.Matchers(path)
 
@@ -294,7 +271,7 @@ func main() {
 			url = config.DefaultUrl
 		}
 
-		// url, type is (redirect || reverse-proxy)
+		// url, type (redirect || reverse-proxy)
 		return url, forwardType
 	}))
 
@@ -313,7 +290,7 @@ func main() {
 		port = config.Port
 	}
 
-	log.Printf("Server started. port:%v", port)
+	log.Printf("Server started | port:%v", port)
 
 	/* client := &http.Client{
 	        //Timeout: 20 * time.Second,
@@ -323,7 +300,6 @@ func main() {
 	} */
 
 	err := http.ListenAndServe(":"+port, hdl(mux))
-	//err := http.ListenAndServeTLS(":"+port, "server.crt", "server.key", hdl(mux))
 
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
