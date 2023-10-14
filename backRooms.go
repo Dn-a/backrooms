@@ -1,7 +1,7 @@
 package main
 
 /*
-   Di Natale Antonino
+* Di Natale Antonino | https://www.dn-a.it
 */
 
 import (
