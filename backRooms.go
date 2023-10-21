@@ -1,7 +1,8 @@
 package main
 
 /*
-* Di Natale Antonino | https://www.dn-a.it
+ * Copyright (c) 2023, Antonino Di Natale | https://www.dn-a.it
+ *
  */
 
 import (
@@ -11,17 +12,16 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"os"
 	"strings"
 
 	"github.com/gorilla/handlers"
-	"gopkg.in/yaml.v3"
 )
 
 const (
-	REDIRECT      = "REDIRECT"
-	REVERSE_PROXY = "REVERSE-PROXY"
-	JOLLY         = "**"
+	CONFIG_FILE_NANE = "config.yml"
+	REDIRECT         = "REDIRECT"
+	REVERSE_PROXY    = "REVERSE-PROXY"
+	JOLLY            = "**"
 )
 
 type customTransport struct {
@@ -34,22 +34,7 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return res, err
 }
 
-type resource struct {
-	Name     string `yaml:"name"`
-	Matchers string `yaml:"matchers"`
-	Type     string `default:"proxy" yaml:"type"`
-	Url      string `yaml:"url"`
-}
-
-type configurations struct {
-	Port            string              `yaml:"port"`
-	DefaultUrl      string              `yaml:"default-url"`
-	Resources       map[string]resource `yaml:"resources"`
-	UpdatedOn       string
-	RequestMatchers *map[string]interface{}
-}
-
-func (c *configurations) Matchers(path string) (*resource, bool) {
+func (c *Configurations) Matchers(path string) (*Resource, bool) {
 	check := false
 	slicedPath := strings.Split(path, "/")[1:]
 
@@ -58,7 +43,7 @@ func (c *configurations) Matchers(path string) (*resource, bool) {
 	log.Printf("sliced path: %v", slicedPath)
 
 	var matchers *map[string]any = c.RequestMatchers
-	var rsc *resource
+	var rsc *Resource
 
 	for _, p := range slicedPath {
 		//Remove query string
@@ -69,7 +54,7 @@ func (c *configurations) Matchers(path string) (*resource, bool) {
 		m, ok := (*matchers)[p]
 
 		if ok {
-			if r, rOk := m.(*resource); rOk {
+			if r, rOk := m.(*Resource); rOk {
 				rsc = r
 				check = true
 				break
@@ -78,7 +63,7 @@ func (c *configurations) Matchers(path string) (*resource, bool) {
 				matchers = m.(*map[string]interface{})
 			}
 		} else if m2, ok2 := (*matchers)[JOLLY]; ok2 {
-			if r, rOk := m2.(*resource); rOk {
+			if r, rOk := m2.(*Resource); rOk {
 				log.Printf("Jolly %v", m2)
 				rsc = r
 				check = true
@@ -113,47 +98,10 @@ func getURIResource(target string) string {
 	return resource
 }
 
-var conf *configurations
-
-func getConfig() (*configurations, error) {
-	info, er := os.Stat("config.yaml")
-	if er != nil {
-		log.Printf("FileInfo: %v", er)
-	}
-	modTime := info.ModTime().String()
-
-	if conf == nil {
-		conf = &configurations{UpdatedOn: modTime}
-	}
-
-	if len(conf.Resources) == 0 || conf.UpdatedOn != modTime {
-		conf.UpdatedOn = modTime
-		readFile, e := os.ReadFile("config.yaml")
-
-		if e != nil {
-			log.Printf("File err: %v\n", e)
-		}
-
-		log.Printf("GetConfing: Unmarshal config.yaml")
-
-		err := yaml.Unmarshal(readFile, conf)
-
-		conf.RequestMatchers = generateRequestMatchers(conf)
-
-		if err != nil {
-			log.Printf("err: %v\n", err)
-		}
-	}
-
-	//log.Printf("%+v\n", modTime)
-
-	return conf, nil
-}
-
-func generateRequestMatchers(config *configurations) *map[string]interface{} {
+func generateRequestMatchers(config *Configurations) *map[string]interface{} {
 	m := make(map[string]interface{})
 
-	for _, resource := range conf.Resources {
+	for _, resource := range config.Resources {
 		slicedMatchers := strings.Split(resource.Matchers, "/")[1:]
 		if len(slicedMatchers) > 0 {
 			resourceAddress := resource
@@ -169,7 +117,7 @@ func generateRequestMatchers(config *configurations) *map[string]interface{} {
 	return &m
 }
 
-func matchersRecursion(matchers *[]string, resource *resource) *map[string]interface{} {
+func matchersRecursion(matchers *[]string, resource *Resource) *map[string]interface{} {
 	mp := make(map[string]interface{})
 	matcher := (*matchers)[0]
 
@@ -244,12 +192,12 @@ const DEFAULT_URL = "http://localhost"
 
 func main() {
 
-	config, _ := getConfig()
+	config, _ := GetConfig()
 
 	mux := http.NewServeMux()
 
 	mux.Handle("/", forward(func(path string) (string, string) {
-		config, _ = getConfig()
+		config, _ = GetConfig()
 
 		// E.G:
 		// key: foo
@@ -282,7 +230,12 @@ func main() {
 	//methods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
 	credentials := handlers.AllowCredentials()
 
-	hdl := handlers.CORS(origins /* headers, methods, */, credentials)
+	hdl := handlers.CORS(
+		origins,
+		//headers,
+		//methods,
+		credentials,
+	)
 
 	// E.G: 4300
 	var port = DEFAULT_PORT
@@ -290,8 +243,9 @@ func main() {
 		port = config.Port
 	}
 
-	log.Printf("Server started | port:%v", port)
+	log.Printf("Backrooms started on port %v", port)
 
+	// TODO: TLS
 	/* client := &http.Client{
 	        //Timeout: 20 * time.Second,
 	        Transport: &http.Transport{
