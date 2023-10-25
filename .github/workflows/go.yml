@@ -3,6 +3,8 @@
 
 name: Go Build
 
+run-name: Deploy to ${{ inputs.deploy_target }} by @${{ github.actor }}
+
 on:
   workflow_dispatch
   #push:
