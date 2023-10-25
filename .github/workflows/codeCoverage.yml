@@ -1,12 +1,13 @@
 name: Code coverage
 
 on:
-  push:
+  workflow_dispatch
+  #push:
     #branches:
     #  - main
-  pull_request:
-    branches:
-      - main
+  #pull_request:
+  #  branches:
+  #    - main
 
 jobs:
   test:
