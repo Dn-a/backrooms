@@ -1,4 +1,4 @@
-name: Generate code coverage badge
+name: Code coverage
 
 on:
   push:
@@ -10,8 +10,8 @@ on:
 
 jobs:
   test:
+    name: Run Test and coverage
     runs-on: ubuntu-latest
-    name: Update coverage badge
     steps:
       - name: Checkout
         uses: actions/checkout@v2
