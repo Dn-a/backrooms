@@ -5,6 +5,8 @@ name: Go
 
 on:
   workflow_run:
+    workflows: ["Build"]
+    types: [requested]
   #push:
   #  branches: [ "main" ]
   #pull_request:
