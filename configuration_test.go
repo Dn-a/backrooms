@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -21,9 +22,13 @@ var _ = Describe("Backrooms", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	/* AfterEach(func() {
-
-	}) */
+	It("File not fonud", func() {
+		var err error
+		fileName := "noFile.yml"
+		config, err = GetConfig(fileName)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(Equal(fmt.Sprintf("File %v not found!", fileName)))
+	})
 
 	It("has port", func() {
 		Expect(config.Port).NotTo(BeNil())

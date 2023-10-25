@@ -18,10 +18,10 @@ import (
 )
 
 const (
-	CONFIG_FILE_NANE = "config.yml"
-	REDIRECT         = "REDIRECT"
-	REVERSE_PROXY    = "REVERSE-PROXY"
-	JOLLY            = "**"
+	DEFAULT_FILE_NANE = "config.yml"
+	REDIRECT          = "REDIRECT"
+	REVERSE_PROXY     = "REVERSE-PROXY"
+	JOLLY             = "**"
 )
 
 type customTransport struct {
@@ -32,51 +32,6 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	//log.Println("custom RoundTrip")
 	res, err := http.DefaultTransport.RoundTrip(req)
 	return res, err
-}
-
-func (c *Configurations) Matchers(path string) (*Resource, bool) {
-	check := false
-	slicedPath := strings.Split(path, "/")[1:]
-
-	//var queryString string
-
-	log.Printf("sliced path: %v", slicedPath)
-
-	var matchers *map[string]any = c.RequestMatchers
-	var rsc *Resource
-
-	for _, p := range slicedPath {
-		//Remove query string
-		if strings.Contains(p, "?") {
-			p = strings.Split(p, "?")[0]
-		}
-
-		m, ok := (*matchers)[p]
-
-		if ok {
-			if r, rOk := m.(*Resource); rOk {
-				rsc = r
-				check = true
-				break
-			} else {
-				log.Printf("Ok %v", m)
-				matchers = m.(*map[string]interface{})
-			}
-		} else if m2, ok2 := (*matchers)[JOLLY]; ok2 {
-			if r, rOk := m2.(*Resource); rOk {
-				log.Printf("Jolly %v", m2)
-				rsc = r
-				check = true
-				break
-			} else {
-				matchers = m2.(*map[string]interface{})
-			}
-		} else {
-			break
-		}
-	}
-
-	return rsc, check
 }
 
 func slicedUrl(target string) []string {
@@ -96,39 +51,6 @@ func getURIResource(target string) string {
 		//log.Printf("resource: %s", resource)
 	}
 	return resource
-}
-
-func generateRequestMatchers(config *Configurations) *map[string]interface{} {
-	m := make(map[string]interface{})
-
-	for _, resource := range config.Resources {
-		slicedMatchers := strings.Split(resource.Matchers, "/")[1:]
-		if len(slicedMatchers) > 0 {
-			resourceAddress := resource
-			mainKey := slicedMatchers[0]
-			slice := slicedMatchers[1:]
-			if len(slice) == 0 {
-				m[mainKey] = &resourceAddress
-			} else {
-				m[mainKey] = matchersRecursion(&slice, &resourceAddress)
-			}
-		}
-	}
-	return &m
-}
-
-func matchersRecursion(matchers *[]string, resource *Resource) *map[string]interface{} {
-	mp := make(map[string]interface{})
-	matcher := (*matchers)[0]
-
-	if len(*matchers) == 1 {
-		mp[matcher] = resource
-		return &mp
-	} else {
-		slice := (*matchers)[1:]
-		mp[matcher] = matchersRecursion(&slice, resource)
-		return &mp
-	}
 }
 
 func reverseProxy(url string) *httputil.ReverseProxy {
