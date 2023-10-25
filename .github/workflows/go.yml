@@ -10,7 +10,7 @@ on:
   
 jobs:
   build:
-    name: Build project
+    name: Build project - ${{ github.ref_name }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
