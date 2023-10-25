@@ -3,6 +3,9 @@
 
 name: Go Build
 
+env:
+  TEST: test
+  
 run-name: Build on ${{ github.ref_name }} | ${{ env.TEST }}
 
 on:
@@ -27,5 +30,3 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-      env:
-        TEST: test
