@@ -3,7 +3,7 @@
 
 name: Go Build
 
-run-name: Build on <${{ github.ref_name }}> ${{$TEST}}
+run-name: Build on <${{ github.ref_name }}> echo $TEST
 
 on:
   workflow_dispatch
