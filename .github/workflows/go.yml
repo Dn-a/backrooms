@@ -4,14 +4,11 @@
 name: Go Build
 
 on:
-  #workflow_run:
-  push:
-    branches: [ "main" ]
-  #pull_request:
+  workflow_dispatch
+  #push:
   #  branches: [ "main" ]
-
+  
 jobs:
-
   build:
     name: Build project
     runs-on: ubuntu-latest
