@@ -3,7 +3,7 @@
 
 name: Go Build
 
-run-name: Deploy to ${{ inputs.deploy_target }} by @${{ github.actor }}
+run-name: Build on ${{ github.ref_name }}
 
 on:
   workflow_dispatch
@@ -12,7 +12,7 @@ on:
   
 jobs:
   build:
-    name: Build project - ${{ github.ref_name }}
+    name: Build project
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
