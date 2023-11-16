@@ -3,11 +3,11 @@ port: 4300
 default-url: https://www.google.com
 
 resources:
-  
+
   googleR:
     name: googleR
     matchers: /**
-    type: redirect    
+    type: reverse-proxy
     url: https://www.google.com
 
   google:
@@ -15,3 +15,9 @@ resources:
     matchers: /search
     type: reverse-proxy
     url: https://www.google.com
+
+  test:
+    name: test
+    matchers: /resource1/resource2
+    type: reverse-proxy
+    #url: https://www.google.com

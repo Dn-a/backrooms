@@ -19,4 +19,5 @@ require (
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/tools v0.12.0 // indirect
+	golang.org/x/tools/cmd/cover v0.1.0-deprecated // indirect
 )
