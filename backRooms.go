@@ -7,14 +7,13 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"strings"
-
-	"github.com/gorilla/handlers"
 )
 
 const (
@@ -89,20 +88,27 @@ func forward(callback func(path string) (string, string)) http.Handler {
 		log.Printf("%v", forwardType)
 		log.Printf("%v: %v", req.Method, req.URL)
 
-		if req.Method == http.MethodPost {
-			buf, _ := io.ReadAll(req.Body)
-			req.Body = io.NopCloser(bytes.NewBuffer(buf))
-			log.Printf("REQUEST BODY: %s\n", buf)
-		}
-
-		// Here is where the magic happens
-		//
-		// if resource == auth (E.G: keycloak request) then the request will be redirect to appropiate Keycloak URL
-		if forwardType == REDIRECT {
-			//w.Header().Set("Content-Type", "application/json")
-			http.Redirect(w, req, req.URL.String(), http.StatusTemporaryRedirect)
+		if req.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", req.Header.Get("access-control-request-headers"))
+			fmt.Fprintln(w, "test")
 		} else {
-			reverseProxy(url).ServeHTTP(w, req)
+
+			if req.Method == http.MethodPost {
+				buf, _ := io.ReadAll(req.Body)
+				req.Body = io.NopCloser(bytes.NewBuffer(buf))
+				log.Printf("REQUEST BODY: %s\n", buf)
+			}
+
+			// Here is where the magic happens
+			//
+			// if resource == auth (E.G: keycloak request) then the request will be redirect to appropiate Keycloak URL
+			if forwardType == REDIRECT {
+				http.Redirect(w, req, req.URL.String(), http.StatusTemporaryRedirect)
+			} else {
+				reverseProxy(url).ServeHTTP(w, req)
+			}
 		}
 
 	})
@@ -145,19 +151,10 @@ func main() {
 		return url, forwardType
 	}))
 
-	handlers.MaxAge(3600)
-	origins := handlers.AllowedOrigins([]string{"*"})
-
+	//handlers.MaxAge(3600)
+	//origins := handlers.AllowedOrigins([]string{"*"})
 	//headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Accept", "Accept-Language", "Content-Type", "Content-Language", "Origin"})
 	//methods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
-	credentials := handlers.AllowCredentials()
-
-	hdl := handlers.CORS(
-		origins,
-		//headers,
-		//methods,
-		credentials,
-	)
 
 	// E.G: 4300
 	var port = DEFAULT_PORT
@@ -167,15 +164,7 @@ func main() {
 
 	log.Printf("Backrooms started on port %v", port)
 
-	// TODO: TLS
-	/* client := &http.Client{
-	        //Timeout: 20 * time.Second,
-	        Transport: &http.Transport{
-	                TLSHandshakeTimeout: 700 * time.Millisecond,
-	        },
-	} */
-
-	err := http.ListenAndServe(":"+port, hdl(mux))
+	err := http.ListenAndServe(":"+port, mux)
 
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
