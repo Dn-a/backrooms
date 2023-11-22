@@ -6,7 +6,7 @@ name: Go Build
 env:
   TEST: test
   
-run-name: Build on ${{ github.ref_name }} | ${{ TEST }}
+run-name: Build on ${{ github.ref_name }} | $TEST
 
 on:
   workflow_dispatch
