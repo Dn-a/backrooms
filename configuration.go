@@ -109,18 +109,19 @@ func MatchersRecursion(matchers *[]string, resource *Resource) *map[string]inter
 	}
 }
 
-func (c *Configurations) Matchers(path string) (*Resource, bool) {
+func (c *Configurations) Matchers(url string) (*Resource, bool) {
 	check := false
-	slicedPath := strings.Split(path, "/")[1:]
+
+	pathArray := getPathAsArray(url)
 
 	//var queryString string
 
-	log.Printf("sliced path: %v", slicedPath)
+	log.Printf("sliced path: %v", pathArray)
 
 	var matchers *map[string]any = c.RequestMatchers
 	var rsc *Resource
 
-	for _, p := range slicedPath {
+	for _, p := range pathArray {
 		//Remove query string
 		if strings.Contains(p, "?") {
 			p = strings.Split(p, "?")[0]
@@ -152,4 +153,11 @@ func (c *Configurations) Matchers(path string) (*Resource, bool) {
 	}
 
 	return rsc, check
+}
+
+func getPathAsArray(url string) []string {
+	// ensures that path doesn't have protocol + domain part
+	path := strings.Split(url, "://")
+	pathArray := strings.Split(path[len(path)-1], "/")
+	return pathArray[1:]
 }

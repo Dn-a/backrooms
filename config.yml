@@ -12,7 +12,7 @@ resources:
 
   google:
     name: google
-    matchers: /search
+    matchers: /search/**
     type: reverse-proxy
     url: https://www.google.com
 

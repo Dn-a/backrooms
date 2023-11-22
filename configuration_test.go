@@ -13,7 +13,7 @@ func TestConfig(t *testing.T) {
 	RunSpecs(t, "Backrooms configuration yaml")
 }
 
-var _ = Describe("Backrooms", func() {
+var _ = Describe("Configuration", func() {
 	var config *Configurations
 	var err error
 
@@ -40,6 +40,44 @@ var _ = Describe("Backrooms", func() {
 
 	It("has updated on", func() {
 		Expect(config.UpdatedOn).NotTo(BeNil())
+	})
+
+	It("should return stripped path array", func() {
+		url := "http://domain.com/res1/res2"
+		path := getPathAsArray(url)
+		Expect(path).NotTo(BeEmpty())
+		Expect(path[0]).To(Equal("res1"))
+		Expect(path[1]).To(Equal("res2"))
+	})
+	It("should return path array", func() {
+		url := "/res1/res2"
+		path := getPathAsArray(url)
+		Expect(path).NotTo(BeEmpty())
+		Expect(path[0]).To(Equal("res1"))
+		Expect(path[1]).To(Equal("res2"))
+	})
+
+	It("should generate Matchers", func() {
+		config = &Configurations{Resources: make(map[string]Resource)}
+		config.Resources["res1"] = Resource{Name: "res1", Matchers: "/res1/**", Url: "http://localhost"}
+		config.RequestMatchers = generateRequestMatchers(config)
+
+		matchers := (*config.RequestMatchers)
+
+		Expect(matchers).NotTo(BeNil())
+		Expect((matchers)["res1"]).NotTo(BeNil())
+	})
+
+	It("should match", func() {
+		config = &Configurations{Resources: make(map[string]Resource)}
+		config.Resources["res1"] = Resource{Name: "res1", Matchers: "/res1/**", Url: "http://localhost"}
+		config.RequestMatchers = generateRequestMatchers(config)
+
+		url := "http://localhost/res1/res2"
+		res, _ := config.Matchers(url)
+
+		Expect(res).NotTo(BeNil())
+		Expect(res.Url).To(Equal("http://localhost"))
 	})
 
 })

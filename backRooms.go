@@ -88,12 +88,20 @@ func forward(callback func(path string) (string, string)) http.Handler {
 		log.Printf("%v", forwardType)
 		log.Printf("%v: %v", req.Method, req.URL)
 
+		origin := req.Header.Get("Origin")
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+
 		if req.Method == http.MethodOptions {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", req.Header.Get("access-control-request-headers"))
-			fmt.Fprintln(w, "test")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "*")
+			fmt.Fprintln(w, "OPTION preflight request")
 		} else {
+
+			for k, v := range req.Header {
+				w.Header().Set(k, strings.Join(v, ";"))
+			}
 
 			if req.Method == http.MethodPost {
 				buf, _ := io.ReadAll(req.Body)
