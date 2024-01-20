@@ -1,0 +1,36 @@
+name: Coverage
+
+on:
+  workflow_dispatch
+
+jobs:
+  test:
+    name: Run Test and coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.21'
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run Test
+        run: |
+          go test -v ./... -covermode=count -coverprofile=c.out
+          go tool cover -func=c.out -o=c.out
+
+      # sed command with regexp pattern to replace matched line
+      # sed -i -e 's/tag:.*/tag: ""/g' root/folder/file
+      - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
+        run: |
+          tail -f -n 1 a.txt | grep -o "[0-9].*%$"
+          
