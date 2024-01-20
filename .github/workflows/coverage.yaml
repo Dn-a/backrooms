@@ -23,19 +23,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Run Test
+      - name: Run Test & Coverage
         run: |
           go test -v ./... -covermode=count -coverprofile=c.out
           go tool cover -func=c.out -o=c.out 
 
       # sed command with regexp pattern to replace matched line
       # sed -i -e 's/tag:.*/tag: ""/g' root/folder/file
-      - name: GO Coverage  # Pass the `coverage.out` output to this action
+      - name: Extract coverage result  # Pass the `c.out` output to github env
         run: |
           echo "COVERAGE=$(tail -n 1 c.out | grep -o "[0-9].*%$")" >> $GITHUB_ENV 
 
-      - name: Set README coverage Badge  # Pass the `coverage.out` output to this action
+      - name: Set README Coverage Badge
         run: |
           echo ${{env.COVERAGE}} 
           sed -i -e 's/Coverage-.*%/Coverage-${{env.COVERAGE}}/g' README.md 
+
+      - name: Commit & Push 
+        run: |
+          git config --global user.name "GHA"
+          git config --global user.email "<>"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add README.md
+            git commit -m "update coverage=${{env.COVERAGE}} on README.md"
+            git push origin main
+            echo "README.md updated"
+          else
+            echo "No change, skipping"
+          fi
           
