@@ -30,11 +30,12 @@ jobs:
 
       # sed command with regexp pattern to replace matched line
       # sed -i -e 's/tag:.*/tag: ""/g' root/folder/file
-      - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
+      - name: GO Coverage  # Pass the `coverage.out` output to this action
         run: |
           echo "COVERAGE=$(tail -n 1 c.out | grep -o "[0-9].*%$")" >> $GITHUB_ENV 
 
-      - name: print covergae  # Pass the `coverage.out` output to this action
+      - name: Set README coverage Badge  # Pass the `coverage.out` output to this action
         run: |
           echo ${{env.COVERAGE}} 
+          sed -i -e 's/Coverage-.*%/Coverage-${{env.COVERAGE}}/g' README.md 
           
