@@ -1,6 +1,6 @@
 # Backrooms
-[![CI](https://img.shields.io/badge/CI-passed-green?logo=github)](https://github.com/Dn-a/backrooms/actions/workflows/go.yml)
-[![Coverage](https://img.shields.io/badge/Coverage-100.0%25-brightgreen)](https://github.com/tj-actions/coverage-badge-go/actions/workflows/test.yml)
+[![CI](https://img.shields.io/badge/CI-passed-brightgreen?logo=github)](https://github.com/Dn-a/backrooms/actions/workflows/go.yml)
+[![Coverage](https://img.shields.io/badge/Coverage-0.0%25-brightgreen)](https://github.com/Dn-a/backrooms/actions/workflows/codeCoverage.yml)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/dnag88)
 
 Backrooms is an easy way to redirect or reverse-proxy the client request through a single access point.
