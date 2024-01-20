@@ -26,11 +26,15 @@ jobs:
       - name: Run Test
         run: |
           go test -v ./... -covermode=count -coverprofile=c.out
-          go tool cover -func=c.out -o=c.out
+          go tool cover -func=c.out -o=c.out 
 
       # sed command with regexp pattern to replace matched line
       # sed -i -e 's/tag:.*/tag: ""/g' root/folder/file
       - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
         run: |
-          tail -n 1 c.out | grep -o "[0-9].*%$"
+          echo "COVERAGE=$(tail -n 1 c.out | grep -o "[0-9].*%$")" >> $GITHUB_ENV 
+
+      - name: print covergae  # Pass the `coverage.out` output to this action
+        run: |
+          echo ${{env.COVERAGE}} 
           
