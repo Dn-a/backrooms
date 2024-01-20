@@ -32,5 +32,5 @@ jobs:
       # sed -i -e 's/tag:.*/tag: ""/g' root/folder/file
       - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
         run: |
-          tail -f -n 1 a.txt | grep -o "[0-9].*%$"
+          tail -f -n 1 c.out | grep -o "[0-9].*%$"
           
