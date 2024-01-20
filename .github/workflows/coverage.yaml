@@ -28,12 +28,14 @@ jobs:
           go test -v ./... -covermode=count -coverprofile=c.out
           go tool cover -func=c.out -o=c.out 
 
-      # sed command with regexp pattern to replace matched line
-      # sed -i -e 's/tag:.*/tag: ""/g' root/folder/file
+      # tail command to extract last line of c.out file
+      # second stage, will be used grep command to extract matched string (pattern: [0-9].*%$)
       - name: Extract coverage result  # Pass the `c.out` output to github env
         run: |
           echo "COVERAGE=$(tail -n 1 c.out | grep -o "[0-9].*%$")" >> $GITHUB_ENV 
 
+      # sed command with regexp pattern to replace matched line
+      # sed -i -e 's/tag:.*/tag: ""/g' root/folder/file
       - name: Set README Coverage Badge
         run: |
           echo ${{env.COVERAGE}} 
